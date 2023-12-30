@@ -79,13 +79,15 @@ def extract_text(element):
 
 # Get company keywords
 def get_company_keywords(company, row, col_list):
-    comp_l1 = company.replace('-','').replace('.','').split()
-    comp_l2 = company.replace('-','').replace('.','').split()
+    comp_l1 = company.replace('-',' ').replace('.',' ').split()
+    comp_l2 = company.replace('_',' ').replace('.',' ').split()
     comp_l3 = company.lower().replace('ä','ae').replace('ö','oe').replace('ü','ue').split()
     comp_l4 = company.split()
-    comp_l = list(set(comp_l1 + comp_l2 + comp_l3 + comp_l4))
+    comp_l5 = company.replace('[', '').replace(']', '').split()
+    comp_l = list(set(comp_l1 + comp_l2 + comp_l3 + comp_l4 + comp_l5))
     comp_keywords_f = [str(e).lower() for e in comp_l if len(str(e).lower()) >= 3]
-    comp_keywords = [e for e in comp_keywords_f if not '.mbh' in e and not 'gmbh' in e]
+    appendix = ['gmbh', 'mbh', 'inc', 'limited', 'ltd', 'llc', 'com', 'co.']
+    comp_keywords = [e for e in comp_keywords_f if not any(a in e for a in appendix)]
     sm_names = ['Facebook', 'Instagram']
     for n in sm_names:
         if n in col_list:
@@ -94,7 +96,7 @@ def get_company_keywords(company, row, col_list):
             if sm_linkpart in addkey:
                 sm_name = addkey.split(sm_linkpart)[1].replace('/', '').strip().lower()
                 comp_keywords.append(sm_name.lower())
-    comp_keywords = list(set(comp_keywords))
+    comp_keywords = list(set(comp_keywords)) + [company]
     return comp_keywords
 
 
@@ -149,7 +151,8 @@ def get_search_results(Comment, soup):
 # Filter function for website links with the highest probability
 def get_website(comp_keywords, search_results):
     other_pages = ['facebook', 'instagram', 'twitter', 'youtube', 'tiktok', 'linkedin', 'xing', 'trustpilot', 'amazon',
-                   'ebay']
+                   'ebay', 'pinterest', 'giphy.co', 'koelnerliste', 'kimeta.de', 'yumpu.com', 'kununu', '/es/', '.co/'
+                   'praxispanda', '.co.in']
     filtered_results = [row for row in search_results if 'http' in row[0] and (not any(n in row[0] for n in other_pages)
                                                                         and any(k in row[0] for k in comp_keywords))]
     website_scores = {}
@@ -160,7 +163,7 @@ def get_website(comp_keywords, search_results):
             l_part = l_part[:40]
         for k in comp_keywords:
             if k in row[0][:30]:
-                website_scores[row[0]] += 1
+                website_scores[row[0]] += 2
             if k in l_part:
                 website_scores[row[0]] += 1
             if k in str(row[1]) or k in str(row[2]):
@@ -170,6 +173,8 @@ def get_website(comp_keywords, search_results):
         if 'www.' in row[0]:
             website_scores[row[0]] += 1
         if '.com' in row[0]:
+            website_scores[row[0]] += 1
+        if '.de' in row[0] and not ('impressum' in row[0] or 'contact' in row[0]):
             website_scores[row[0]] += 1
         if len(row[0]) <= (len(''.join(comp_keywords)) + 20):
             website_scores[row[0]] += 1
