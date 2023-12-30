@@ -24,6 +24,7 @@ import re
 def print_hello(name):
     print(f'Hello {name}')
 
+
 # Start selenium chromedriver and open the startpage
 def start_browser_sel(webdriver, Service, chromedriver_path, startpage):
     # Open the Browser with a service object and an user agent
@@ -43,6 +44,7 @@ def start_browser_sel(webdriver, Service, chromedriver_path, startpage):
         pass
     return driver, startpage
 
+
 # Get all text elements from the page or bigger elements
 def get_visible_text(Comment, soup):
     def tag_visible(element):
@@ -58,6 +60,7 @@ def get_visible_text(Comment, soup):
     pagetext = re.sub('\s+', ' ', pagetext).strip()
     return pagetext
 
+
 # Extract text from elements
 def extract_text(element):
     if element:
@@ -72,6 +75,7 @@ def extract_text(element):
             return new_element
         else:
             return element
+
 
 # Get company keywords
 def get_company_keywords(company, row, col_list):
@@ -93,6 +97,7 @@ def get_company_keywords(company, row, col_list):
     comp_keywords = list(set(comp_keywords))
     return comp_keywords
 
+
 # Search for a specific keyword
 def search_for(driver, startpage, keyword):
     try:
@@ -112,6 +117,7 @@ def search_for(driver, startpage, keyword):
         driver.execute_script("window.scrollBy(0,2500)", "")
         time.sleep(1)
     return driver.current_url
+
 
 #Get the full search results
 def get_search_results(Comment, soup):
@@ -139,17 +145,45 @@ def get_search_results(Comment, soup):
         results.append([link, title, content])
     return results
 
+
+# Filter function for website links with the highest probability
 def get_website(comp_keywords, search_results):
-    company_links = []
-    other_pages = ['facebook', 'instagram', 'twitter', 'youtube', 'tiktok', 'linkedin', 'trustpilot', 'amazon', 'ebay']
-    filtered_results = [row for row in search_results if not any(n in row[0] for n in other_pages)]
-    company_links = [row[0] for row in filtered_results if any(k in row[0] for k in comp_keywords)]
-    for row in search_results:
-        if any(k in row[0] for k in comp_keywords) and any(k in str(row[1]).lower() for k in comp_keywords):
-            website = row[0]
-            company_links.remove(website)
-            return website, company_links
-    return '', company_links
+    other_pages = ['facebook', 'instagram', 'twitter', 'youtube', 'tiktok', 'linkedin', 'xing', 'trustpilot', 'amazon',
+                   'ebay']
+    filtered_results = [row for row in search_results if 'http' in row[0] and (not any(n in row[0] for n in other_pages)
+                                                                        and any(k in row[0] for k in comp_keywords))]
+    website_scores = {}
+    for row in filtered_results:
+        website_scores[row[0]] = 0
+        l_part = row[0]
+        if len(l_part) >= 40:
+            l_part = l_part[:40]
+        for k in comp_keywords:
+            if k in row[0][:30]:
+                website_scores[row[0]] += 1
+            if k in l_part:
+                website_scores[row[0]] += 1
+            if k in str(row[1]) or k in str(row[2]):
+                website_scores[row[0]] += 1
+        if 'Homepage' in str(row[1]) or 'Official' in str(row[1]):
+            website_scores[row[0]] += 1
+        if 'www.' in row[0]:
+            website_scores[row[0]] += 1
+        if '.com' in row[0]:
+            website_scores[row[0]] += 1
+        if len(row[0]) <= (len(''.join(comp_keywords)) + 20):
+            website_scores[row[0]] += 1
+
+    # Order the dictionary by scores in descending order and the shortest length of the links
+    sorted_websites = sorted(website_scores.items(), key=lambda x: (x[1], -len(x[0])), reverse=True)
+    if len(sorted_websites) == 0:
+        return '', sorted_websites
+
+    website_links = [k[0] for k in sorted_websites]
+    website = website_links[0]
+    website_links.pop(0)
+    return website, website_links
+
 
 # Collect all the links and remove duplicates (but keep them ordered)
 def get_all_links(soup):
@@ -157,9 +191,10 @@ def get_all_links(soup):
     linklist = list(OrderedDict.fromkeys(linklist))
     return linklist
 
+
 # Filter Social Media account links
 def sm_filter(linklist):
-    platforms = ['facebook.com', 'instagram.com', 'twitter.com', 'youtube.com', 'tiktok.com', 'linkedin.com']
+    platforms = ['facebook.com', 'instagram.com', 'twitter.com', 'youtube.com', 'tiktok.com', 'linkedin.com', 'xing.com']
     sm_links_all = [l for l in linklist if any(p in l for p in platforms)]
     not_profile = ['/post', 'hashtag', 'sharer','/status', 'photo/', 'photos', 'watch?', '/video/', 'discover', '.help',
                     'reels', 'story', 'explore', 'playlist', 'sharer', 'policy', 'privacy', 'instagram.com/p/',
