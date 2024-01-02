@@ -176,7 +176,7 @@ def get_website(comp_keywords, search_results):
             website_scores[row[0]] += 1
         if '.de' in row[0] and not ('impressum' in row[0] or 'contact' in row[0]):
             website_scores[row[0]] += 1
-        if len(row[0]) <= (len(''.join(comp_keywords)) + 20):
+        if len(row[0]) <= (len(''.join(comp_keywords)) + 13):
             website_scores[row[0]] += 1
 
     # Order the dictionary by scores in descending order and the shortest length of the links
