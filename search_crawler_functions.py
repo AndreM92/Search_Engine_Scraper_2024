@@ -20,6 +20,8 @@ import time
 import os
 import re
 
+import search_crawler_credentials as cred
+
 # Say Hello
 def print_hello(name):
     print(f'Hello {name}')
@@ -28,7 +30,7 @@ def print_hello(name):
 # Start selenium chromedriver and open the startpage
 def start_browser_sel(webdriver, Service, chromedriver_path, startpage):
     # Open the Browser with a service object and an user agent
-    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"
+    user_agent = cred.my_useragent
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument(f'user-agent={user_agent}')
 #    chrome_options.add_argument('--headless')
