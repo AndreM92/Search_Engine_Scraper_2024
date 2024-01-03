@@ -28,7 +28,7 @@ def print_hello(name):
 
 
 # Start selenium chromedriver and open the startpage
-def start_browser_sel(webdriver, Service, chromedriver_path, startpage):
+def start_browser_sel(chromedriver_path, startpage):
     # Open the Browser with a service object and an user agent
     user_agent = cred.my_useragent
     chrome_options = webdriver.ChromeOptions()
@@ -48,7 +48,7 @@ def start_browser_sel(webdriver, Service, chromedriver_path, startpage):
 
 
 # Get all text elements from the page or bigger elements
-def get_visible_text(Comment, soup):
+def get_visible_text(soup):
     def tag_visible(element):
         if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
             return False
@@ -124,7 +124,7 @@ def search_for(driver, startpage, keyword):
 
 
 #Get the full search results
-def get_search_results(Comment, soup):
+def get_search_results(soup):
     hits = soup.find_all('div', class_='MjjYud')
     ads = soup.find_all('div', class_='uEierd')
     results = []
@@ -145,7 +145,7 @@ def get_search_results(Comment, soup):
         link = str(link_elem['href']).strip()
         title_elem = a.find('div', {'role':'heading'})
         title = extract_text(title_elem)
-        content = get_visible_text(Comment, a)
+        content = get_visible_text(a)
         results.append([link, title, content])
     return results
 
@@ -218,3 +218,20 @@ def sm_filter(linklist):
                 pos += 1
     return sm_links, linklist
 
+# Order the Social Media accounts
+def sm_order(sm_links, linklist):
+    platforms = ['facebook.com', 'instagram.com', 'linkedin.com', 'tiktok.com', 'twitter.com', 'youtube.com']
+    account_list = ['' for _ in range(len(platforms))]
+    for l in sm_links:
+        for pos, h in enumerate(platforms):
+            if h in str(l).lower() and account_list[pos] == '':
+                account_list[pos] = l
+    sm_else = [l for l in sm_links if l not in account_list]
+    for l in linklist:
+        if any(h.split('.')[0] in str(l).lower() for h in platforms) and l not in account_list:
+            sm_else.append(l)
+    if len(sm_else) == 0:
+        sm_else = ''
+    elif len(sm_else) == 1:
+        sm_else = sm_else[0]
+    return account_list, sm_else
