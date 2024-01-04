@@ -21,7 +21,7 @@ def scrape_startpage(driver, website):
         time.sleep(5)
     except:
         return ['' for _ in range(4)]
-    decline_str = "//*[contains(text(), 'ablehnen') or contains(text(), 'Ablehnen') or contains(text(), 'ABLEHNEN')]"
+    decline_str = "//*[contains(text(), 'ablehnen') or contains(text(), 'Ablehnen') or contains(text(), 'ABLEHNEN') or contains(text(), 'Verweigern')]"
     cookiebuttons = driver.find_elements('xpath', decline_str)
     if len(cookiebuttons) == 0:
         accept_str = "//*[contains(text(), 'akzeptieren') or contains(text(), 'AKZEPTIEREN') or contains(text(), 'einverstanden')]"
@@ -53,7 +53,7 @@ def scrape_imp(website, linklist_f):
             except:
                 pass
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    imp_pagetext = get_visible_text(soup)
+    imp_pagetext = str(get_visible_text(soup))
     if 'Seite existiert nicht' in imp_pagetext or 'Not Found' in imp_pagetext or curr_page == driver.current_url:
         imp_page = [l for l in linklist_f if 'impressum' in str(l).lower()]
         if len(imp_page) == 0:
@@ -61,8 +61,11 @@ def scrape_imp(website, linklist_f):
                 imp_page = website + '/impressum'
             else:
                 imp_page = website + 'impressum'
-        driver.get(imp_page)
-        time.sleep(3)
+        try:
+            driver.get(imp_page)
+            time.sleep(3)
+        except:
+            return '', ''
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         imp_pagetext = get_visible_text(soup)
         if 'Seite existiert nicht' in imp_pagetext or 'Not Found' in imp_pagetext or curr_page == driver.current_url:
@@ -88,41 +91,55 @@ if __name__ == '__main__':
     driver, startpage = start_browser_sel(chromedriver_path, startpage)
 
     for id, row in df_source.iterrows():
-        if id <= 5:
-            continue
+ #   def main (id, row):
+  #      if id <= 432:
+  #          continue
         company = extract_text(row['Anbieter'])
-        website = row['Webseite']
-        break
-
-        account_links, sm_else, linklist_f, pagetext = scrape_startpage(driver, website)
-        imp_links, imp_pagetext = scrape_imp(website, linklist_f)
-        imp_links_f = [l for l in imp_links if l not in account_links and l not in sm_else]
-
-        sm_se = eval(row['Social Media'])
-        sm_se_else = []
-        for l in sm_se:
-            account_list = [l for l in account_links if len(str(l)) > 4]
-            if any(a in l for a in account_list):
-                continue
-            sm_se_else.append(l)
-        account_links_se, sm_else_se = sm_order(sm_se_else, sm_se_else)
+        website = str(row['Webseite'])
+        if len(website) <= 4:
+            website = ''
+        if website:
+            account_links, sm_else, linklist_f, pagetext = scrape_startpage(driver, website)
+            imp_links, imp_pagetext = scrape_imp(website, linklist_f)
+            imp_links_f = [l for l in imp_links if l not in account_links and l not in sm_else]
+        if len(str(account_links)) <= 4:
+            account_links = ['' for _ in range(6)]
+        account_links_se = []
+        sm_se_str = str(row['Social Media'])
+        if len(sm_se_str) > 4 and '[' in sm_se_str:
+            try:
+                sm_se = eval(row['Social Media'])
+                sm_se_else = []
+                for l in sm_se:
+                    account_list = [l for l in account_links if len(str(l)) > 4]
+                    if any(a in l for a in account_list):
+                        continue
+                    sm_se_else.append(l)
+                    account_links_se, sm_else_se = sm_order(sm_se_else, sm_se_else)
+            except:
+                pass
+        if len(str(account_links_se)) <= 4:
+            account_links_se = ['' for _ in range(6)]
 
         full_row = [id, company, website] + account_links + account_links_se + [sm_else, linklist_f, pagetext,
                                                                                     imp_links_f, imp_pagetext]
         newtable.append(full_row)
+        print(id, company, website, account_links)
 
-        # Dataframe
-        sm_headers = ['Facebook', 'Instagram', 'LinkedIn', 'TikTok', 'X', 'YouTube']
-        sm_headers2 = [h + '2' for h in sm_headers]
-        header = ['ID', 'Anbieter', 'Website'] + sm_headers + sm_headers2 + \
-                 ['Andere_sm', 'Links', 'Startseite', 'Links_Imp', 'Impressum']
-        df_website = pd.DataFrame(newtable,columns=header)
 
-        # Create an Excel file
-        dt_str_now = datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
-        recent_filename = 'Nahrungsergaenzungsmittel_Webseiten' + dt_str_now + '.xlsx'
-        df_website.to_excel(recent_filename)
+    # Dataframe
+    sm_headers = ['Facebook', 'Instagram', 'LinkedIn', 'TikTok', 'X', 'YouTube']
+    sm_headers2 = [h + '2' for h in sm_headers]
+    header = ['ID', 'Anbieter', 'Website'] + sm_headers + sm_headers2 + \
+             ['Andere_sm', 'Links', 'Startseite', 'Links_Imp', 'Impressum']
+    df_website = pd.DataFrame(newtable,columns=header)
 
+    # Create an Excel file
+    dt_str_now = datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
+    recent_filename = 'Nahrungsergaenzungsmittel_Webseiten' + dt_str_now + '.xlsx'
+    df_website.to_excel(recent_filename)
+
+    df_website.to_csv('output.csv', index=False)
 
 
 
