@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 import time
 import os
 import re
+from langdetect import detect
 
 import search_crawler_credentials as cred
 
@@ -235,3 +236,31 @@ def sm_order(sm_links, linklist):
     elif len(sm_else) == 1:
         sm_else = sm_else[0]
     return account_list, sm_else
+
+# Interpretation of the language
+def lang_interpreter(content):
+    excludelist = ['http', 'web', 'follower', 'like', 'community', 'rating', 'joined', 'cookie', 'access', 'online', 'shop']
+    eng_words = ['corporate', 'provider', 'products', 'individuals', 'disease']
+    ger_words = ['offiziell', 'erfahrung', 'stadt', 'fragen', 'unternehmen', 'verbindung']
+    content_list = content.split()
+    for e in content_list:
+        desc = ' '.join([str(c) for c in content_list if str(c).isalpha()
+                         and not any(e in str(c).lower() for e in excludelist)])
+    if len(desc) < 5:
+        lang = '-'
+    else:
+        try:
+            lang_det = detect(desc)
+            if lang_det == 'en':
+                lang = 'Englisch/ Internat.'
+            elif lang_det == 'de':
+                lang = 'Deutsch'
+            else:
+                lang = 'Andere'
+        except:
+            lang = '-'
+    if any(w in desc.lower() for w in eng_words):
+        lang = 'Deutsch'
+    if any(w in desc.lower() for w in ger_words):
+        lang = 'Englisch/ Internat.'
+    return lang
