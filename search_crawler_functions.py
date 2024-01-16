@@ -138,6 +138,10 @@ def get_search_results(soup):
         title = extract_text(title_elem)
         content_elem = h.find('div', class_='kb0PBd cvP2Ce')
         content = extract_text(content_elem)
+        if not content:
+            content = get_visible_text(h)
+            if content and title and title in content:
+                content = content.split(title)[1].strip()
         results.append([link, title, content])
     for a in ads:
         link_elem = a.find('a',href=True)
@@ -240,8 +244,9 @@ def sm_order(sm_links, linklist):
 # Interpretation of the language
 def lang_interpreter(content):
     excludelist = ['http', 'web', 'follower', 'like', 'community', 'rating', 'joined', 'cookie', 'access', 'online', 'shop']
-    eng_words = ['corporate', 'provider', 'products', 'individuals', 'disease']
-    ger_words = ['offiziell', 'erfahrung', 'stadt', 'fragen', 'unternehmen', 'verbindung']
+    eng_words = ['welcome', 'corporate', 'provider', 'products', 'individuals', 'disease']
+    ger_words = ['herzlich', 'offiziell', 'erfahrung', 'stadt', 'fragen', 'familie', 'unternehmen', 'verbindung',
+                 'produktion', 'vertrieb', 'tochter', 'aktuelle']
     content_list = content.split()
     for e in content_list:
         desc = ' '.join([str(c) for c in content_list if str(c).isalpha()
