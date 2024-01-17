@@ -29,12 +29,13 @@ def print_hello(name):
 
 
 # Start selenium chromedriver and open the startpage
-def start_browser_sel(chromedriver_path, startpage):
+def start_browser_sel(chromedriver_path, startpage, headless = False):
     # Open the Browser with a service object and an user agent
     user_agent = cred.my_useragent
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument(f'user-agent={user_agent}')
-#    chrome_options.add_argument('--headless')
+    if headless:
+        chrome_options.add_argument('--headless')
     service = Service(chromedriver_path)
     driver = webdriver.Chrome(service=service, options=chrome_options)
     driver.maximize_window()
