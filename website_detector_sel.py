@@ -26,12 +26,8 @@ from datetime import datetime, timedelta
 import time
 
 ########################################################################################################################
-def main_function(webdriver, Service, chromedriver_path, startpage, df_source, newtable, skip):
+def main_function(chromedriver_path, startpage, df_source, newtable, skip):
     col_list = list(df_source.columns)
-    for e in col_list:
-        if 'Firma' in e or 'Anbieter' in e:
-            comp_col = e
-            break
     count = 0
     for id, row in df_source.iterrows():
         if id <= skip:
@@ -44,31 +40,22 @@ def main_function(webdriver, Service, chromedriver_path, startpage, df_source, n
     #        count = 0
         # Start the selenium chromedriver
         if count == 0:
-            driver, startpage = start_browser_sel(webdriver, Service, chromedriver_path, startpage)
+            driver, startpage = start_browser_sel(chromedriver_path, startpage)
         count += 1
-
-        company = extract_text(row[comp_col])
-        nextpos = col_list.index(comp_col) + 1
-        if len(str(row[nextpos])) > 4:
-            key_w = str(row[nextpos])
-        elif len(str(row[nextpos + 1])) > 4:
-            key_w = str(row[nextpos + 1])
-        else:
-            key_w = company
-        comp_keywords = get_company_keywords(company, row, col_list)
-        search_url = search_for(driver, startpage, key_w)
+        comp_keywords, company = get_company_keywords(row, col_list)
+        search_url = search_for(driver, startpage, company)
         if search_url == startpage or '/sorry' in driver.current_url:
             driver.quit()
             skip = id -1
             return newtable, skip
  #           time.sleep(7)
         soup = BeautifulSoup(driver.page_source,'lxml')
-        search_results = get_search_results(Comment, soup)
+        search_results = get_search_results(soup)
         website, website_options = get_website(comp_keywords, search_results)
         if not website and len(website_options) == 0:
             search_url = search_for(driver, startpage, company)
             soup = BeautifulSoup(driver.page_source, 'lxml')
-            search_results = get_search_results(Comment, soup)
+            search_results = get_search_results(soup)
             website, website_options = get_website(comp_keywords, search_results)
         linklist = get_all_links(soup)
         sm_links, linklist = sm_filter(linklist)
@@ -94,7 +81,7 @@ if __name__ == '__main__':
     source_file = r"Liste_Nahrungsergänzungsmittel 2024_20231227.xlsx"
     df_source = pd.read_excel(source_file)
 
-    newtable, skip = main_function(webdriver, Service, chromedriver_path, startpage, df_source, newtable, skip)
+    newtable, skip = main_function(chromedriver_path, startpage, df_source, newtable, skip)
 
     # DataFrame
     header = ['ID','Anbieter','Webseite','Alternative Webseiten','Social Media','Weitere Links']
