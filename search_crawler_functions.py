@@ -80,6 +80,30 @@ def extract_text(element):
         else:
             return element
 
+def extract_number(element):
+    if element:
+        if not isinstance(element,(str,int,float)):
+            element = element.text.strip()
+        element = str(element)
+        if len(element) < 1:
+            return element
+        element = str(re.sub(r'[^0-9.,]', '', element)).strip()
+        if element[-2:] == '.0' or element[-2:] == ',0':
+            element = element[:-2]
+        if ',' in element:
+            if len(element.split(',')[1]) >= 3:
+                element = element.replace(',','')
+            else:
+                element = element.replace(',','.')
+        if '.' in element:
+            try:
+                element = float(element)
+            finally:
+                return element
+        try:
+            element = int(element)
+        finally:
+            return element
 
 # Get company keywords
 def get_company_keywords(row, col_list):
@@ -101,7 +125,6 @@ def get_company_keywords(row, col_list):
     for e in col_list:
         el = e.lower()
         if 'name' in el and not name:
-            print(row[e])
             name = extract_text(row[e])
             comp_keywords.append(name)
             company = name
