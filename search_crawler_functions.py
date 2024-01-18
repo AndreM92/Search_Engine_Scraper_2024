@@ -82,16 +82,32 @@ def extract_text(element):
 
 
 # Get company keywords
-def get_company_keywords(company, row, col_list):
+def get_company_keywords(row, col_list):
+    for e in col_list:
+        if 'Firma' in e or 'Anbieter' in e or 'Marke' in e:
+            comp_col = e
+            break
+    company = extract_text(row[comp_col])
     comp_l1 = company.replace('-',' ').replace('.',' ').split()
     comp_l2 = company.replace('_',' ').replace('.',' ').split()
     comp_l3 = company.lower().replace('ä','ae').replace('ö','oe').replace('ü','ue').split()
     comp_l4 = company.split()
-    comp_l5 = company.replace('[', '').replace(']', '').split()
+    comp_l5 = company.replace('[', '').replace(']', '').replace(')','').replace('(','').split()
     comp_l = list(set(comp_l1 + comp_l2 + comp_l3 + comp_l4 + comp_l5))
-    comp_keywords_f = [str(e).lower() for e in comp_l if len(str(e).lower()) >= 3]
-    appendix = ['gmbh', 'mbh', 'inc', 'limited', 'ltd', 'llc', 'com', 'co.']
-    comp_keywords = [e for e in comp_keywords_f if not any(a in e for a in appendix)]
+    comp_keywords_f = [str(e).lower() for e in comp_l]
+    appendix = ['gmbh', 'mbh', 'inc', 'limited', 'ltd', 'llc', 'com', 'co.', 'lda', 'the']
+    comp_keywords = [e for e in comp_keywords_f if not any(a in e for a in appendix)] + [company]
+    web_name, name = None, None
+    for e in col_list:
+        el = e.lower()
+        if 'name' in el and not name:
+            print(row[e])
+            name = extract_text(row[e])
+            comp_keywords.append(name)
+            company = name
+        elif 'webs' in el and not web_name:
+            web_name = str(row[e]).split('//',1)[1].replace('www.','').split('.')[0]
+            comp_keywords.append(web_name)
     sm_names = ['Facebook', 'Instagram']
     for n in sm_names:
         if n in col_list:
@@ -100,8 +116,9 @@ def get_company_keywords(company, row, col_list):
             if sm_linkpart in addkey:
                 sm_name = addkey.split(sm_linkpart)[1].replace('/', '').strip().lower()
                 comp_keywords.append(sm_name.lower())
-    comp_keywords = list(set(comp_keywords)) + [company]
-    return comp_keywords
+    comp_keywords = list(set(comp_keywords))
+    comp_keywords = [e for e in comp_keywords if len(e) >= 3]
+    return comp_keywords, company
 
 
 # Search for a specific keyword
