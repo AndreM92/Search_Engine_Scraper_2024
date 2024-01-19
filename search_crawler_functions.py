@@ -105,6 +105,63 @@ def extract_number(element):
         finally:
             return element
 
+# Improved version of extract_number
+def extract_every_number(element):
+    if element:
+        if not isinstance(element,(str,int,float)):
+            element = element.text.strip()
+        if not element:
+            return element
+        element = str(element).replace('\u200b', '').replace('\xa0', ' ').replace('\\xa0', ' ').replace('\n', ' ')
+        element = element.replace('!', '').replace('#', '').replace('+', ' ').replace('-', ' ').replace('%', ' ')
+        element = re.sub('\s+', ' ', element).strip()
+        if 'M' in element:
+            try:
+                element = str(int(float(element.replace("Mio", " ").replace("M", " ").split(' ')[0].replace(",", ".").strip()) * 1000000))
+            except:
+                return element
+        elif 'Tsd.' in element:
+            try:
+                element = float(str(re.sub(r'[^0-9,]', '', element)).strip().replace(',','.')) * 1000
+            except:
+                return element
+        elif str(element)[-1] == 'K':
+            try:
+                element = float(str(re.sub(r'[^0-9.]', '', element)).strip()) * 1000
+            except:
+                return element
+        else:
+            element = str(re.sub(r'[^0-9.,]', '', element)).strip()
+        element = str(element)
+        if element[-2:] == '.0' or element[-2:] == ',0':
+            element = element[:-2]
+            try:
+                element = int(element)
+            finally:
+                return element
+        if '.' in element and ',' in element:
+            if ',' in element.split('.')[-1]:
+                element = element.replace('.', '').replace(',', '.')
+            else:
+                element = element.replace(',', '')
+            try:
+                element = float(element)
+            finally:
+                return element
+        if ',' in element:
+            if element[-1] == '0':
+                element = element.replace(',', '')
+            element = element.replace(',','.')
+        if '.' in element:
+            try:
+                element = float(element)
+            finally:
+                return element
+        try:
+            element = int(element)
+        finally:
+            return element
+
 # Get company keywords
 def get_company_keywords(row, col_list):
     for e in col_list:
