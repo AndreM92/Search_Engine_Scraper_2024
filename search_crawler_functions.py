@@ -110,6 +110,8 @@ def extract_every_number(element):
     if element:
         if not isinstance(element,(str,int,float)):
             element = element.text.strip()
+        if str(element) == '0':
+            return 0
         if not element:
             return element
         element = str(element).replace('\u200b', '').replace('\xa0', ' ').replace('\\xa0', ' ').replace('\n', ' ')
@@ -161,6 +163,7 @@ def extract_every_number(element):
             element = int(element)
         finally:
             return element
+
 
 # Get company keywords
 def get_company_keywords(row, col_list):
