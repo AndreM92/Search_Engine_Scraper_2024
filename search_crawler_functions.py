@@ -173,7 +173,7 @@ def get_company_keywords(row, col_list):
             break
     company = extract_text(row[comp_col])
     comp_l1 = company.replace('-',' ').replace('.',' ').split()
-    comp_l2 = company.replace('_',' ').replace('.',' ').split()
+    comp_l2 = company.replace('_',' ').replace('.',' ').replace('+','').replace('-','').replace("'","").split()
     comp_l3 = company.lower().replace('ä','ae').replace('ö','oe').replace('ü','ue').split()
     comp_l4 = company.split()
     comp_l5 = company.replace('[', '').replace(']', '').replace(')','').replace('(','').split()
