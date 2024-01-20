@@ -42,12 +42,12 @@ def rank_sm_accounts(platform, comp_keywords, branch_keywords, search_results):
     p_link = platform.lower() + '.com/'
     not_profile = ['/post', 'hashtag', 'sharer','/status', 'photo/', 'photos', 'watch?', '/video/', 'discover', '.help',
                     'reels', 'story', 'explore', 'playlist', 'sharer', 'policy', 'privacy', 'instagram.com/p/',
-                   '/tag/','/embed/']
-    accounts = [row for row in search_results if p_link in row[0] and any(k in row[0] for k in comp_keywords)
-                and not any(n in row[0] for n in not_profile)]
+                   '/reel/', '/tag/', '/embed/']
+    accounts = [row for row in search_results if p_link in row[0] and not any(n in row[0] for n in not_profile)
+                and (any(k in row[0] for k in comp_keywords) or '/channel' in row[0])]
     ranking_dict = {}
     for pos, row in enumerate(accounts):
-        link, title, content = row
+        link, title, content = [str(r) for r in row]
         ranking_dict[link] = len(accounts) - pos
         link_part = link.split(p_link)[1].split('/')[0]
         if link_part in comp_keywords:
@@ -69,34 +69,48 @@ def rank_sm_accounts(platform, comp_keywords, branch_keywords, search_results):
 
 if __name__ == '__main__':
     # Choose a Social Media Platform
-    platform = 'Facebook'
+    platform = 'YouTube'
     os.chdir(path_to_crawler_functions)
     from search_crawler_functions import *
     import search_crawler_credentials as cred
     os.chdir(file_path)
     df_source = pd.read_excel(source_file)
     col_list = list(df_source.columns)
+    # If you only want to open the browser once (include driver.get(search_url) into the loop)
+    #driver, page = start_browser_sel(chromedriver_path, search_url, headless=False)
 
     new_table = []
     for count, row in df_source.iterrows():
+        if count <= 122:
+            continue
         id = extract_every_number(row['ID'])
-        print(count, id)
-        account = str(row[platform])
+        if platform == 'Twitter':
+            account = str(row['X'])
+        else:
+            account = str(row[platform])
         comp_keywords, company = get_company_keywords(row, col_list)
-#        if len(account) > 10 and any(k in account for k in comp_keywords):
-        if len(account) > 10 and company.lower() in account.lower():
+        if len(account) > 10 and (any(k.lower() in account.lower() for k in comp_keywords) or 'channel' in account):
             complete_row = [id, company, account, '']
             new_table.append(complete_row)
+            print(count, id)
             continue
 
         search_url = compose_search_url(platform, company)
-        driver, page = start_browser_sel(chromedriver_path, search_url, headless=True)
+        # Start the driver for every search request
+        driver, page = start_browser_sel(chromedriver_path, search_url, headless=False)
+        if '/sorry' in driver.current_url:
+            driver.quit()
+            break
+
         search_results = collect_search_results(driver)
         account_list = rank_sm_accounts(platform, comp_keywords, branch_keywords, search_results)
         if len(account_list) >= 1:
             account = account_list.pop(0)
         new_row = [id, company, account, account_list]
         new_table.append(new_row)
+        driver.quit()
+        print(count, id, account)
+
 
     # Dataframe
     header = ['ID', 'Anbieter', platform, 'alt_links']
@@ -108,4 +122,6 @@ if __name__ == '__main__':
     df_se.to_excel(recent_filename)
 
 
-    driver.quit()
+    for n in new_table:
+        print(n)
+print(new_table[-1])
