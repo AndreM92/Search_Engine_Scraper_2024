@@ -29,9 +29,8 @@ def print_hello(name):
 
 
 # Start selenium chromedriver and open the startpage
-def start_browser_sel(chromedriver_path, startpage, headless = False):
+def start_browser_sel(chromedriver_path, startpage, user_agent, headless = False):
     # Open the Browser with a service object and an user agent
-    user_agent = cred.my_useragent
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument(f'user-agent={user_agent}')
     if headless:
@@ -167,11 +166,14 @@ def extract_every_number(element):
 
 # Get company keywords
 def get_company_keywords(row, col_list):
+    company = ''
+    comp_keywords = []
     for e in col_list:
+        e = str(e)
         if 'Firma' in e or 'Anbieter' in e or 'Marke' in e:
-            comp_col = e
+            company = extract_text(row[e])
             break
-    company = extract_text(row[comp_col])
+
     comp_l1 = company.replace('-',' ').replace('.',' ').split()
     comp_l2 = company.replace('_',' ').replace('.',' ').replace('+','').replace('-','').replace("'","").split()
     comp_l3 = company.lower().replace('ä','ae').replace('ö','oe').replace('ü','ue').split()
@@ -179,17 +181,36 @@ def get_company_keywords(row, col_list):
     comp_l5 = company.replace('[', '').replace(']', '').replace(')','').replace('(','').split()
     comp_l = list(set(comp_l1 + comp_l2 + comp_l3 + comp_l4 + comp_l5))
     comp_keywords_f = [str(e).lower() for e in comp_l]
-    appendix = ['gmbh', 'mbh', 'inc', 'limited', 'ltd', 'llc', 'com', 'co.', 'lda', 'the']
-    comp_keywords = [e for e in comp_keywords_f if not any(a in e for a in appendix)] + [company]
+    appendix = ['gmbh', 'mbh', 'inc', 'limited', 'ltd', 'llc', 'co.', 'lda', 'a.s.', 'S.A.', ' OG', ' AG', ' SE',
+                'GmbH & Co. KG', 'GmbH', 'B.V.', 'KG', 'LLC', 'NV', 'N.V.',
+                '& Co.', 'S.L.U.', '(', ')', '.de', '.com', '.at', 'oHG', 'Ltd.', 'Limited']
+    for c in comp_keywords_f:
+        for a in appendix:
+            c = c.replace(a, '')
+        if len(c) >= 4:
+            comp_keywords.append(c)
+    if company:
+        comp_keywords + [company]
     web_name, name = None, None
     for e in col_list:
+        web_name = None
         el = e.lower()
-        if 'name' in el and not name:
+        if 'name ' in el and not name:
             name = extract_text(row[e])
             comp_keywords.append(name)
-            company = name
-        elif 'webs' in el and not web_name:
-            web_name = str(row[e]).split('//',1)[1].replace('www.','').split('.')[0]
+        elif 'webs' in el:
+            col_val = extract_text(row[e])
+            if len(col_val) >= 4:
+                web_name = str(col_val).split('//', 1)[1].replace('www.', '').split('.')[0]
+        elif 'homepage' in el:
+            col_val = extract_text(row[e])
+            if len(col_val) >= 4:
+                web_name = col_val.split('.')[0]
+        elif 'internet' in el:
+            col_val = extract_text(row[e])
+            if len(col_val) >= 4:
+                web_name = col_val.split('.')[0]
+        if web_name:
             comp_keywords.append(web_name)
     sm_names = ['Facebook', 'Instagram']
     for n in sm_names:
@@ -200,7 +221,7 @@ def get_company_keywords(row, col_list):
                 sm_name = addkey.split(sm_linkpart)[1].replace('/', '').strip().lower()
                 comp_keywords.append(sm_name.lower())
     comp_keywords = list(set(comp_keywords))
-    comp_keywords = [e for e in comp_keywords if len(e) >= 3]
+    comp_keywords = [e for e in comp_keywords if len(e) >= 3 and e != 'nan']
     return comp_keywords, company
 
 
@@ -229,7 +250,7 @@ def search_for(driver, startpage, keyword):
 def get_search_results(soup):
     hits = soup.find_all('div', class_='MjjYud')
     ads = soup.find_all('div', class_='uEierd')
-    results = []
+    sresults = []
     for h in hits:
         link_elem = h.find('a',href=True)
         if not link_elem:
@@ -243,7 +264,7 @@ def get_search_results(soup):
             content = get_visible_text(h)
             if content and title and title in content:
                 content = content.split(title)[1].strip()
-        results.append([link, title, content])
+        sresults.append([link, title, content])
     for a in ads:
         link_elem = a.find('a',href=True)
         if not link_elem:
@@ -252,40 +273,41 @@ def get_search_results(soup):
         title_elem = a.find('div', {'role':'heading'})
         title = extract_text(title_elem)
         content = get_visible_text(a)
-        results.append([link, title, content])
-    return results
+        sresults.append([link, title, content])
+    return sresults
 
 
 # Filter function for website links with the highest probability
-def get_website(comp_keywords, search_results):
+def get_website(comp_keywords, sresults):
     other_pages = ['facebook', 'instagram', 'twitter', 'youtube', 'tiktok', 'linkedin', 'xing', 'trustpilot', 'amazon',
                    'ebay', 'pinterest', 'giphy.co', 'koelnerliste', 'kimeta.de', 'yumpu.com', 'kununu', '/es/', '.co/'
                    'praxispanda', '.co.in']
-    filtered_results = [row for row in search_results if 'http' in row[0] and (not any(n in row[0] for n in other_pages)
-                                                                        and any(k in row[0] for k in comp_keywords))]
+    filtered_results = [rows for rows in sresults if 'http' in rows[0] and (not any(n in rows[0] for n in other_pages)
+                                                                        and any(k in rows[0] for k in comp_keywords))]
     website_scores = {}
-    for row in filtered_results:
-        website_scores[row[0]] = 0
-        l_part = row[0]
-        if len(l_part) >= 40:
-            l_part = l_part[:40]
+    for pos, row2 in enumerate(filtered_results):
+        if len(row2[0]) < 30:
+            continue
+        website_scores[row2[0]] = 0
         for k in comp_keywords:
-            if k in row[0][:30]:
-                website_scores[row[0]] += 2
-            if k in l_part:
-                website_scores[row[0]] += 1
-            if k in str(row[1]) or k in str(row[2]):
-                website_scores[row[0]] += 1
-        if 'Homepage' in str(row[1]) or 'Official' in str(row[1]):
-            website_scores[row[0]] += 1
-        if 'www.' in row[0]:
-            website_scores[row[0]] += 1
-        if '.com' in row[0]:
-            website_scores[row[0]] += 1
-        if '.de' in row[0] and not ('impressum' in row[0] or 'contact' in row[0]):
-            website_scores[row[0]] += 1
-        if len(row[0]) <= (len(''.join(comp_keywords)) + 13):
-            website_scores[row[0]] += 1
+            if k in row2[0]:
+                website_scores[row2[0]] += 2
+            if k in row2[0] or k in str(row2[2]):
+                website_scores[row2[0]] += 1
+        if 'Homepage' in str(row2[1]) or 'Official' in str(row2[1]):
+            website_scores[row2[0]] += 1
+        if 'www.' in row2[0]:
+            website_scores[row2[0]] += 1
+        if '.com' in row2[0]:
+            website_scores[row2[0]] += 1
+        if '.de' in row2[0] and not ('impressum' in row2[0] or 'contact' in row2[0]):
+            website_scores[row2[0]] += 2
+        if len(row2[0]) <= 50:
+            website_scores[row2[0]] += 2
+        for f in filtered_results:
+            if row2[0] in f[0]:
+                website_scores[row2[0]] += 2
+        website_scores[row2[0]] -= pos
 
     # Order the dictionary by scores in descending order and the shortest length of the links
     sorted_websites = sorted(website_scores.items(), key=lambda x: (x[1], -len(x[0])), reverse=True)
@@ -307,11 +329,11 @@ def get_all_links(soup):
 
 # Filter Social Media account links
 def sm_filter(linklist):
-    platforms = ['facebook.com', 'instagram.com', 'twitter.com', 'youtube.com', 'tiktok.com', 'linkedin.com', 'xing.com']
+    platforms = ['facebook.com', 'instagram.com', 'twitter.com', 'youtube.com', 'tiktok.com', 'linkedin.com', 'x.com', 'xing.com']
     sm_links_all = [l for l in linklist if any(p in l for p in platforms)]
     not_profile = ['/post', 'hashtag', 'sharer','/status', 'photo/', 'photos', 'watch?', '/video/', 'discover', '.help',
-                    'reels', 'story', 'explore', 'playlist', 'policy', 'privacy', 'instagram.com/p/', '/share'
-                   '/tag/','/embed/']
+                    'reels', 'story', 'explore', 'playlist', 'policy', 'policies', 'privacy', 'instagram.com/p/', '/share'
+                   '/tag/','/embed/', '/terms', '/legal', '/tos', '/help']
     sm_links = [l for l in sm_links_all if not any(e in l for e in not_profile)]
     sm_links = list(set(sm_links))
     sm_links.sort(key=len)
@@ -326,7 +348,7 @@ def sm_filter(linklist):
 
 # Order the Social Media accounts
 def sm_order(sm_links, linklist):
-    platforms = ['facebook.com', 'instagram.com', 'linkedin.com', 'tiktok.com', 'twitter.com', 'youtube.com']
+    platforms = ['facebook.com', 'instagram.com', 'linkedin.com', 'tiktok.com', 'twitter.com', 'youtube.com', 'x.com']
     account_list = ['' for _ in range(len(platforms))]
     for l in sm_links:
         for pos, h in enumerate(platforms):
@@ -336,10 +358,6 @@ def sm_order(sm_links, linklist):
     for l in linklist:
         if any(h.split('.')[0] in str(l).lower() for h in platforms) and l not in account_list:
             sm_else.append(l)
-    if len(sm_else) == 0:
-        sm_else = ''
-    elif len(sm_else) == 1:
-        sm_else = sm_else[0]
     return account_list, sm_else
 
 # Interpretation of the language
