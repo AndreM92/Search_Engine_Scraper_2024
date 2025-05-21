@@ -167,6 +167,7 @@ def extract_every_number(element):
 # Get company keywords
 def get_company_keywords(row, col_list):
     company = ''
+    web_address = ''
     comp_keywords = []
     for e in col_list:
         e = str(e)
@@ -190,7 +191,7 @@ def get_company_keywords(row, col_list):
         if len(c) >= 4:
             comp_keywords.append(c)
     if company:
-        comp_keywords + [company]
+        comp_keywords = comp_keywords + [company]
     web_name, name = None, None
     for e in col_list:
         web_name = None
@@ -210,6 +211,7 @@ def get_company_keywords(row, col_list):
             col_val = extract_text(row[e])
             if len(col_val) >= 4:
                 web_name = col_val.split('.')[0]
+                web_address = web_name
         if web_name:
             comp_keywords.append(web_name)
     sm_names = ['Facebook', 'Instagram']
@@ -222,7 +224,7 @@ def get_company_keywords(row, col_list):
                 comp_keywords.append(sm_name.lower())
     comp_keywords = list(set(comp_keywords))
     comp_keywords = [e for e in comp_keywords if len(e) >= 3 and e != 'nan']
-    return comp_keywords, company
+    return comp_keywords, company, web_address
 
 
 # Search for a specific keyword
@@ -278,7 +280,8 @@ def get_search_results(soup):
 
 
 # Filter function for website links with the highest probability
-def get_website(comp_keywords, sresults):
+def get_website(comp_keywords, sresults, web_address):
+    website = None
     other_pages = ['facebook', 'instagram', 'twitter', 'youtube', 'tiktok', 'linkedin', 'xing', 'trustpilot', 'amazon',
                    'ebay', 'pinterest', 'giphy.co', 'koelnerliste', 'kimeta.de', 'yumpu.com', 'kununu', '/es/', '.co/'
                    'praxispanda', '.co.in']
@@ -309,15 +312,22 @@ def get_website(comp_keywords, sresults):
                 website_scores[row2[0]] += 2
         website_scores[row2[0]] -= pos
 
-    # Order the dictionary by scores in descending order and the shortest length of the links
-    sorted_websites = sorted(website_scores.items(), key=lambda x: (x[1], -len(x[0])), reverse=True)
-    if len(sorted_websites) == 0:
-        return '', sorted_websites
-
-    website_links = [k[0] for k in sorted_websites]
-    website = website_links[0]
-    website_links.pop(0)
-    return website, website_links
+        # Order the dictionary by scores in descending order and the shortest length of the links
+        sorted_websites = sorted(website_scores.items(), key=lambda x: (x[1], -len(x[0])), reverse=True)
+        if len(sorted_websites) > 0:
+            website_links = [k[0] for k in sorted_websites]
+            sorted_websites = website_links
+            if not web_address:
+                website = website_links[0]
+                website_links.pop(0)
+                return website, sorted_websites
+        if web_address:
+            all_links = [x[0] for x in sresults]
+            sorted_links = sorted(all_links, key=lambda x: len(x))
+            for l in sorted_links:
+                if web_address in l:
+                    return l, sorted_websites
+        return website, sorted_websites
 
 
 # Collect all the links and remove duplicates (but keep them ordered)

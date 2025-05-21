@@ -30,7 +30,7 @@ def compose_search_url(platform, company):
     return f"{search_engine}{keyword}{lang_loc}"
 
 def main_function(driver, startpage, row, col_list):
-    comp_keywords, company = get_company_keywords(row, col_list)
+    comp_keywords, company, web_address = get_company_keywords(row, col_list)
 
     search_url = search_for(driver, startpage, company)
 
@@ -48,12 +48,12 @@ def main_function(driver, startpage, row, col_list):
 #           time.sleep(7)
     soup = BeautifulSoup(driver.page_source,'lxml')
     sresults = get_search_results(soup)
-    website, website_options = get_website(comp_keywords, sresults)
+    website, website_options = get_website(comp_keywords, sresults, web_address)
     if not website and len(website_options) == 0:
         search_url = search_for(driver, startpage, company)
         soup = BeautifulSoup(driver.page_source, 'lxml')
         sresults = get_search_results(soup)
-        website, website_options = get_website(comp_keywords, sresults)
+        website, website_options = get_website(comp_keywords, sresults, web_address)
     linklist = get_all_links(soup)
     sm_links, linklist = sm_filter(linklist)
     other_links = [l for l in linklist if not any(l in e for e in sm_links) and not any(l in e for e in website_options)]
