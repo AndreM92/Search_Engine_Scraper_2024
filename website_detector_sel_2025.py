@@ -30,7 +30,7 @@ def compose_search_url(platform, company):
     return f"{search_engine}{keyword}{lang_loc}"
 
 def main_function(driver, startpage, row, col_list):
-    comp_keywords, company, web_address = get_company_keywords(row, col_list)
+    comp_keywords, company, web_address, web_address2 = get_company_keywords(row, col_list)
 
     search_url = search_for(driver, startpage, company)
 
@@ -41,30 +41,29 @@ def main_function(driver, startpage, row, col_list):
     driver.get(search_url)
     time.sleep(1)
     '''
-
-    if search_url == startpage or '/sorry' in driver.current_url:
-        driver.quit()
-        return None
-#           time.sleep(7)
+    if search_url == startpage or '/sorry' in search_url:
+        input('Press ENTER after solving the captcha')
+#        driver.quit()
+#        return None
     soup = BeautifulSoup(driver.page_source,'lxml')
     sresults = get_search_results(soup)
-    website, website_options = get_website(comp_keywords, sresults, web_address)
+    website, website_options = get_website(comp_keywords, sresults, web_address, web_address2)
     if not website and len(website_options) == 0:
         search_url = search_for(driver, startpage, company)
         soup = BeautifulSoup(driver.page_source, 'lxml')
         sresults = get_search_results(soup)
-        website, website_options = get_website(comp_keywords, sresults, web_address)
+        website, website_options = get_website(comp_keywords, sresults, web_address, web_address2)
     linklist = get_all_links(soup)
     sm_links, linklist = sm_filter(linklist)
     other_links = [l for l in linklist if not any(l in e for e in sm_links) and not any(l in e for e in website_options)]
     result_row = [company, website, website_options, sm_links, other_links]
-    print(result_row[:3])
+    print(result_row)
     return result_row
 
 ########################################################################################################################
 # Starting with an empty table and a number of rows you want so skip
 newtable = []
-skip = -1
+ID_old = 1
 
 # Run the Crawler/ Scraper
 if __name__ == '__main__':
@@ -73,8 +72,6 @@ if __name__ == '__main__':
     os.chdir(file_path)
     df_source = pd.read_excel(source_file)
     col_list = list(df_source.columns)
-    newtable = []
-    ID_old = 1
 
     # Start the selenium chromedriver
     driver, startpage = start_browser_sel(chromedriver_path, startpage, my_useragent, headless=False)
