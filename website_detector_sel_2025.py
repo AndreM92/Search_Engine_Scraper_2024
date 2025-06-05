@@ -13,8 +13,8 @@ import re
 from datetime import datetime, timedelta
 import time
 
-folder_name = "SMP_Automatisierungstechnik"
-file_name = "Kontakte_Automatisierungstechnik_gekürzt"
+folder_name = "SMP_Banken_2025"
+file_name = "Auswahl_SMP Banken 2025_2025-04-01"
 file_path = r"C:\Users\andre\OneDrive\Desktop/" + folder_name
 file_type = ".xlsx"
 source_file = file_name + file_type
@@ -29,10 +29,13 @@ def compose_search_url(platform, company):
     lang_loc = '&gl=de&hl=de&num=50&start=0&location=Germany&uule=w+CAIQICIHR2VybWFueQ'
     return f"{search_engine}{keyword}{lang_loc}"
 
-def main_function(driver, startpage, row, col_list):
+def main_function(driver, startpage, row, col_list, platform):
     comp_keywords, company, web_address, web_address2 = get_company_keywords(row, col_list)
+    keyword = company
+    if platform:
+        keyword = keyword + ' ' + platform
 
-    search_url = search_for(driver, startpage, company)
+    search_url = search_for(driver, startpage, keyword)
 
     '''
     # search query scraper
@@ -64,6 +67,7 @@ def main_function(driver, startpage, row, col_list):
 # Starting with an empty table and a number of rows you want so skip
 newtable = []
 ID_old = 1
+platform = None
 
 # Run the Crawler/ Scraper
 if __name__ == '__main__':
@@ -72,6 +76,9 @@ if __name__ == '__main__':
     os.chdir(file_path)
     df_source = pd.read_excel(source_file)
     col_list = list(df_source.columns)
+
+    # Additional search key
+    platform = 'TikTok'
 
     # Start the selenium chromedriver
     driver, startpage = start_browser_sel(chromedriver_path, startpage, my_useragent, headless=False)
@@ -83,8 +90,12 @@ if __name__ == '__main__':
         IDn += 1
         if IDn < ID_old:
             continue
+        if platform and platform in col_list:
+            platform_link = extract_text(row[platform])
+            if platform_link and len(platform_link) > 10:
+                continue
 
-        result_row = [IDn] + main_function(driver, startpage, row, col_list)
+        result_row = [IDn] + main_function(driver, startpage, row, col_list, platform)
         if not result_row:
             break
 

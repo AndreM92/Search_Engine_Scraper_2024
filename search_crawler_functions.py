@@ -39,12 +39,21 @@ def start_browser_sel(chromedriver_path, startpage, user_agent, headless = False
     driver = webdriver.Chrome(service=service, options=chrome_options)
     driver.maximize_window()
     driver.get(startpage)
-    time.sleep(2)
-    try:
-        cookiebanner = driver.find_element('xpath', "//*[text()='Alle ablehnen']")
-        cookiebanner.click()
-    except:
-        pass
+    time.sleep(3)
+    # Click through the first Cookie Banner
+    cookiebuttons = driver.find_elements('xpath', "//*[contains(text(), 'ablehnen') or contains(text(), 'Ablehnen')]")
+    if len(cookiebuttons) == 0 or 'youtube' in driver.current_url:
+        driver.execute_script('window.scrollTo(0,document.body.scrollHeight)')
+        time.sleep(2)
+        cookiebuttons = driver.find_elements('xpath', '//button[contains(., "ablehnen")]')
+    if len(cookiebuttons) == 0 and not 'instagram' in driver.current_url:
+        cookiebuttons = driver.find_elements(By.TAG_NAME, 'button')
+    if len(cookiebuttons) >= 1:
+        for c in cookiebuttons:
+            try:
+                c.click()
+            except:
+                pass
     return driver, startpage
 
 
