@@ -225,6 +225,10 @@ def get_company_keywords(row, col_list):
                 web_name = col_val.split('.')[0]
         if web_name:
             comp_keywords.append(web_name)
+    if 'Website' in col_list:
+        web_name = extract_text(row['Website'])
+        if len(web_name) > 10:
+            web_address = web_name
     sm_names = ['Facebook', 'Instagram']
     for n in sm_names:
         if n in col_list:
@@ -253,7 +257,7 @@ def search_for(driver, startpage, keyword):
     searchbox.send_keys(Keys.ENTER)
     time.sleep(4)
     # Scrolling
-    for i in range(5):
+    for i in range(3):
         driver.execute_script("window.scrollBy(0,2500)", "")
         time.sleep(1)
     return driver.current_url
@@ -397,6 +401,82 @@ def sm_order(sm_links, linklist):
         if any(h.split('.')[0] in str(l).lower() for h in platforms) and l not in account_list:
             sm_else.append(l)
     return account_list, sm_else
+
+
+def rank_sm_accounts(platform, comp_keywords, branch_keywords, search_results):
+    if platform == 'X':
+        platform = 'Twitter'
+    p_link = platform.lower() + '.com/'
+    not_profile = ['/post', 'hashtag', 'sharer','/status', '/photo', 'photos', '/watch', '/video', '/search', '/events', '/mediaset', 'discover', '.help',
+                'groups', 'reels', 'story', 'explore', 'playlist', 'sharer', 'policy', 'privacy', 'instagram.com/p/', '/public', '/developers'
+                '/blog', '/event', '/reel/', '/tag/', '/embed/', '/jobs', '/pub/dir', '/pulse', '/place', '/channel', '/music',
+                   '/stadt', 'schule']
+    accounts = [row for row in search_results
+                  if p_link in row[0] and not any(n in row[0] for n in not_profile) and not 'Blog' in row[2]
+                        and (any(k.lower() in row[0].lower() for k in comp_keywords) or
+                             any(k.lower() in row[0].lower() for k in branch_keywords))]
+    if len(accounts) == 0:
+        accounts = [row for row in search_results if p_link in row[0] and not any(n in row[0] for n in not_profile)]
+    ranking_dict = {}
+    for pos, row in enumerate(accounts):
+        link, title, content = [str(r) for r in row]
+        # One cleanup step
+        affixes = ['about', 'impressum']
+        for a in affixes:
+            if a in link:
+                link = link.split(a)[0]
+        ranking_dict[link] = len(accounts) - pos
+        link_part = link.split(p_link)[1].split('/')[0]
+        if link_part in comp_keywords:
+            ranking_dict[link] += 2
+        for k in comp_keywords:
+            if k.lower() in title.lower():
+                ranking_dict[link] += 1
+            if k in content:
+                ranking_dict[link] += 1
+        for k in branch_keywords:
+            if k.lower() in link.lower():
+                ranking_dict[link] += 2
+            if k.lower() in title.lower():
+                ranking_dict[link] += 2
+            if k.lower() in content.lower():
+                ranking_dict[link] += 2
+        if 'locale=de' in link:
+            ranking_dict[link] += 2
+        if 'locale' in link and not '=de' in link:
+            ranking_dict[link] -= 2
+    ranking_dict = {k: v for k, v in ranking_dict.items() if v >= 3}
+    ordered_dict = sorted(ranking_dict.items(), key=lambda x:x[1], reverse=True)
+    account_list = [key for key, value in ordered_dict if len(str(key)) > 10]
+    return account_list
+
+
+def get_accounts(account_list):
+    account = ''
+    account2 = ''
+    while len(account_list) >= 1:
+        account = account_list.pop(0)
+        if '?locale' in account:
+            account = account.split('?locale')[0]
+        if len(account) < 10:
+            continue
+        acc_number = str(extract_number(account)).replace('.','')
+        if len(account_list) >= 1:
+            account2 = account_list.pop(0)
+            acc2_number = str(extract_number(account2)).replace('.','')
+        if account in account2 or acc_number in acc2_number:
+            account2 = ''
+        if account2 in account and len(account2) >= 10:
+            account = account2
+            account2 = ''
+        if account:
+            break
+    if len(account_list) == 0:
+        account_list = ''
+    elif len(account_list) == 1:
+        account_list = account_list[0]
+    return account, account2, account_list
+
 
 # Interpretation of the language
 def lang_interpreter(content):
