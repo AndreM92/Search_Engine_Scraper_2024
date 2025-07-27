@@ -454,10 +454,11 @@ def rank_sm_accounts(platform, comp_keywords, branch_keywords, search_results):
 def get_accounts(account_list):
     account = ''
     account2 = ''
+    acc2_number = ''
     while len(account_list) >= 1:
         account = account_list.pop(0)
         if '?locale' in account:
-            account = account.split('?locale')[0]
+            account = account.split('?')[0]
         if len(account) < 10:
             continue
         acc_number = str(extract_number(account)).replace('.','')
