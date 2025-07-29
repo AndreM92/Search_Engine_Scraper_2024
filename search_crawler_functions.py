@@ -375,7 +375,7 @@ def sm_filter(linklist):
     sm_links_all = [l for l in linklist if any(p in l for p in platforms)]
     not_profile = ['/post', 'hashtag', 'sharer','/status', 'photo/', 'photos', 'watch?', '/video/', 'discover', '.help',
                     'reels', 'story', 'explore', 'playlist', 'policy', 'policies', 'privacy', 'instagram.com/p/', '/share'
-                   '/tag/','/embed/', '/terms', '/legal', '/tos', '/help', 'stepstone.de']
+                   '/tag/','/embed/', '/terms', '/legal', '/tos', '/help', 'stepstone.de', '/pages']
     sm_links = [l for l in sm_links_all if not any(e in l for e in not_profile)]
     sm_links = list(set(sm_links))
     sm_links.sort(key=len)
