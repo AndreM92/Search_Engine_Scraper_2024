@@ -14,10 +14,11 @@ from datetime import datetime, timedelta
 import time
 
 file_path = r'C:\Users\andre\OneDrive\Desktop\SMP_Automatisierungstechnik 2025'
-file_name = 'Auswahl_SMP Automatisierungstechnik 2025-08-01'
+file_name = 'Auswahl_SMP Automatisierungstechnik_2_2025-08-01'
 file_type = '.xlsx'
 source_file = file_path + '/' + file_name + file_type
-branch_keywords = ['Automatisierung', 'System', 'Technik', 'Maschine']
+branch_keywords = ['Automatisierung', 'System', 'Technik', 'Maschine', 'Industrie', 'Automation', 'Technologie',
+                   'Technology', 'Roboter', 'Steuerung', 'technik']
 
 ########################################################################################################################
 def scrape_page(driver, startpage, row, col_list, platform):
