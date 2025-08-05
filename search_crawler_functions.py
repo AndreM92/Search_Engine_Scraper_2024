@@ -210,9 +210,11 @@ def get_company_keywords(row, col_list):
             name = extract_text(row[e])
             comp_keywords.append(name)
         elif 'webs' in el:
-            col_val = extract_text(row[e])
+            col_val = str(extract_text(row[e]))
             if len(col_val) >= 4:
-                web_name = str(col_val).split('//', 1)[1].replace('www.', '').split('.')[0]
+                if '//' in col_val:
+                    col_val = str(col_val).split('//', 1)[1]
+                web_name = col_val.replace('www.', '').split('.')[0]
         elif 'homepage' in el:
             col_val = extract_text(row[e])
             if len(col_val) >= 4:
@@ -375,7 +377,7 @@ def sm_filter(linklist):
     sm_links_all = [l for l in linklist if any(p in l for p in platforms)]
     not_profile = ['/post', 'hashtag', 'sharer','/status', 'photo/', 'photos', 'watch?', '/video/', 'discover', '.help',
                     'reels', 'story', 'explore', 'playlist', 'policy', 'policies', 'privacy', 'instagram.com/p/', '/share'
-                   '/tag/','/embed/', '/terms', '/legal', '/tos', '/help', 'stepstone.de', '/pages']
+                   '/tag/','/embed/', '/terms', '/legal', '/tos', '/help', 'stepstone.de']
     sm_links = [l for l in sm_links_all if not any(e in l for e in not_profile)]
     sm_links = list(set(sm_links))
     sm_links.sort(key=len)
