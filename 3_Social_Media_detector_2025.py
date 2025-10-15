@@ -1,3 +1,4 @@
+
 import os
 func_import = r"C:\Users\andre\Documents\Python\Web_Crawler\Search_Engine_Scraper_2024"
 os.chdir(func_import)
@@ -13,14 +14,16 @@ import re
 from datetime import datetime, timedelta
 import time
 
-file_path = r'C:\Users\andre\OneDrive\Desktop\SMP_Automatisierungstechnik 2025'
-file_name = 'Auswahl_SMP Automatisierungstechnik_2_2025-08-01'
-file_type = '.xlsx'
-source_file = file_path + '/' + file_name + file_type
-branch_keywords = ['Automatisierung', 'System', 'Technik', 'Maschine', 'Industrie', 'Automation', 'Technologie',
-                   'Technology', 'Roboter', 'Steuerung', 'technik']
-
+folder_name = "SMP_Mineralwasser 2025"
+file_name = "Auswahl SMP Mineralwasser_2025-10-14"
+file_path = "C:\\Users\\andre\OneDrive\Desktop/" + folder_name
+file_type = ".xlsx"
+source_file = file_name + file_type
+branch_keywords = [
+    'Abfüll', 'Getränk', 'Lebensmittel', 'PET-', 'Flasche', 'Etikett', 'Dosier', 'Wasser', 'Mineral', 'Füllstand',
+    'Verpackung', 'Trink', 'Durst']
 ########################################################################################################################
+
 def scrape_page(driver, startpage, row, col_list, platform):
     comp_keywords, company, website, web_address2 = get_company_keywords(row, col_list)
     account = extract_text(row[platform])
@@ -51,7 +54,7 @@ def scrape_page(driver, startpage, row, col_list, platform):
 #######################################################################################################################
 new_table = []
 ID_old = 0
-platform = 'Facebook'
+platform = 'LinkedIn'
 
 if __name__ == '__main__':
     os.chdir(file_path)
