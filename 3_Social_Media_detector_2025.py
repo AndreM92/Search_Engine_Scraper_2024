@@ -51,7 +51,7 @@ def scrape_page(driver, startpage, row, col_list, platform):
 #######################################################################################################################
 new_table = []
 ID_old = 0
-platform = 'Facebook'
+platform = 'LinkedIn'
 
 if __name__ == '__main__':
     os.chdir(file_path)
