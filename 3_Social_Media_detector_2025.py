@@ -62,7 +62,8 @@ if __name__ == '__main__':
     col_list = list(df_source.columns)
 
     # Start the selenium chromedriver
-    driver, startpage = start_browser_sel(chromedriver_path, startpage, my_useragent, headless=False)
+    driver = start_browser(webdriver, Service, chromedriver_path, headless=False, muted=True)
+    go_to_page(driver, startpage)
 
     for ID, row in df_source.iterrows():
         if 'ID' in col_list:
