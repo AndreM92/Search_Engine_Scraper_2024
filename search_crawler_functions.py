@@ -28,6 +28,52 @@ def print_hello(name):
     print(f'Hello {name}')
 
 
+# Start the driver and open a new page
+def start_browser(webdriver, Service, chromedriver_path, headless=False, muted = False):
+    # Open the Browser with a service object and an user agent
+    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument(f'user-agent={user_agent}')
+    chrome_options.add_argument("--lang=de-DE")
+#    chrome_options.add_argument("--lang=en-US")
+    chrome_options.add_argument("--disable-notifications")
+    if headless:
+        chrome_options.add_argument('--headless')
+    if muted:
+        chrome_options.add_argument("--mute-audio")
+    service = Service(chromedriver_path)
+    # Create a WebDriver instance using the Service and options
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver.maximize_window()
+    return driver
+
+
+def go_to_page(driver, startpage):
+    driver.get(startpage)
+    time.sleep(3)
+    # Click through the first Cookie Banner
+    cookiebuttons = driver.find_elements('xpath', "//*[contains(text(), 'ablehnen') or contains(text(), 'Ablehnen')]")
+    if len(cookiebuttons) == 0  or 'youtube' in driver.current_url:
+        driver.execute_script('window.scrollTo(0,document.body.scrollHeight)')
+        time.sleep(2)
+        cookiebuttons = driver.find_elements('xpath', '//button[contains(., "ablehnen")]')
+    if len(cookiebuttons) == 0 and not 'instagram' in driver.current_url:
+        cookiebuttons = driver.find_elements(By.TAG_NAME,'button')
+    if len(cookiebuttons) >= 1:
+        for c in cookiebuttons:
+            try:
+                c.click()
+            except:
+                pass
+    # Not the best solution so far
+    cookiebuttons = driver.find_elements(By.TAG_NAME, "tiktok-cookie-banner")
+    if len(cookiebuttons) >= 1 or 'tiktok.com' in driver.current_url:
+        import pyautogui
+        pyautogui.moveTo(1452,867) #1749,861
+        pyautogui.click()
+        time.sleep(1)
+
+
 # Start selenium chromedriver and open the startpage
 def start_browser_sel(chromedriver_path, startpage, user_agent, headless = False):
     # Open the Browser with a service object and an user agent
