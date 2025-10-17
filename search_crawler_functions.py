@@ -20,8 +20,7 @@ import time
 import os
 import re
 from langdetect import detect
-
-import search_crawler_credentials as cred
+from search_crawler_credentials import *
 
 # Say Hello
 def print_hello(name):
@@ -474,7 +473,13 @@ def rank_sm_accounts(platform, comp_keywords, branch_keywords, search_results):
             if a in link:
                 link = link.split(a)[0]
         ranking_dict[link] = len(accounts) - pos
-        link_part = link.split(p_link)[1].split('/')[0]
+        link_part = link.split(p_link)[1].replace('in/','').replace('company/','')
+        if '-' in link_part:
+            link_parts = [e for e in link_part.split('-') if len(e) > 3]
+            for p in link_parts:
+                for k in comp_keywords:
+                    if p in k:
+                        ranking_dict[link] += 1
         if link_part in comp_keywords:
             ranking_dict[link] += 2
         for k in comp_keywords:
