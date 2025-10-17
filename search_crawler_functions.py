@@ -472,6 +472,8 @@ def rank_sm_accounts(platform, comp_keywords, branch_keywords, search_results):
         for a in affixes:
             if a in link:
                 link = link.split(a)[0]
+        if not platform.lower() in link.lower():
+            continue
         ranking_dict[link] = len(accounts) - pos
         link_part = link.split(p_link)[1].replace('in/','').replace('company/','')
         if '-' in link_part:
