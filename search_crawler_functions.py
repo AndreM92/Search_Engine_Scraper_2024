@@ -342,16 +342,15 @@ def get_search_results(soup):
 
 
 # Filter function for website links with the highest probability
-def get_website(comp_keywords, sresults, web_address, web_address2):
+def get_website(comp_keywords, sresults, web_address, web_address2, branch_keywords):
     website = ''
     all_links = [x[0] for x in sresults]
     if len(all_links) == 0:
         return website, []
     sorted_links = sorted(all_links, key=lambda x: len(x))
-
     other_pages = ['facebook', 'instagram', 'twitter', 'youtube', 'tiktok', 'linkedin', 'xing', 'trustpilot', 'amazon',
                    'ebay', 'pinterest', 'giphy.co', 'koelnerliste', 'kimeta.de', 'yumpu.com', 'kununu', '/es/', '.co/'
-                   'praxispanda', '.co.in', 'wlw.de', 'firmendatenbank/']
+                   'praxispanda', '.co.in', 'wlw.de', 'firmendatenbank/', 'wikipedia', 'helpcheck.de', 'anwaelte', 'rueden.de']
     filtered_results = [rows for rows in sresults if 'http' in rows[0] and (not any(n in rows[0] for n in other_pages)
                                                                         and any(k in rows[0] for k in comp_keywords))]
     if len(filtered_results) == 0:
@@ -363,35 +362,43 @@ def get_website(comp_keywords, sresults, web_address, web_address2):
 
     website_scores = {}
     for pos, row2 in enumerate(filtered_results):
-        if len(row2[0]) < 17:
+        link = str(row2[0])
+        header = str(row2[1]).lower()
+        desc = str(row2[2]).lower()
+        if len(link) < 13:
             continue
-        website_scores[row2[0]] = 0
+        website_scores[link] = 0
         for k in comp_keywords:
-            if k in row2[0]:
-                website_scores[row2[0]] += 2
-            if k in row2[0] or k in str(row2[2]):
-                website_scores[row2[0]] += 1
+            if k in link:
+                website_scores[link] += 2
+            if k in header or k in desc:
+                website_scores[link] += 2
+        for b in branch_keywords:
+            if b in link:
+                website_scores[link] += 1
+            if b in header or b in desc:
+                website_scores[link] += 1
         if 'Homepage' in str(row2[1]) or 'Official' in str(row2[1]):
-            website_scores[row2[0]] += 1
-        if 'www.' in row2[0]:
-            website_scores[row2[0]] += 1
-        if '.com' in row2[0]:
-            website_scores[row2[0]] += 1
-        if '.de' in row2[0] and not ('impressum' in row2[0] or 'contact' in row2[0]):
-            website_scores[row2[0]] += 2
-        if len(row2[0]) <= 50:
-            website_scores[row2[0]] += 2
+            website_scores[link] += 1
+        if 'www.' in link:
+            website_scores[link] += 1
+        if '.com' in link:
+            website_scores[link] += 1
+        if '.de' in link and not ('impressum' in link or 'contact' in link):
+            website_scores[link] += 2
+        if len(link) <= 50:
+            website_scores[link] += 2
         for f in filtered_results:
-            if row2[0] in f[0]:
-                website_scores[row2[0]] += 2
-        website_scores[row2[0]] -= pos
+            if link in f[0]:
+                website_scores[link] += 2
+        website_scores[link] -= pos
 
     if len(website_scores) == 0:
         return website, all_links
 
     # Order the dictionary by scores in descending order and the shortest length of the links
-    sorted_websites = sorted(website_scores.items(), key=lambda x: (x[1], -len(x[0])), reverse=True)
-    website_links = [k[0] for k in sorted_websites]
+ #   sorted_websites = sorted(website_scores.items(), key=lambda x: (x[1], -len(x[0])), reverse=True)
+    website_links = [k[0] for k in website_scores.items()]
 
     if not web_address:
         website = website_links[0]
