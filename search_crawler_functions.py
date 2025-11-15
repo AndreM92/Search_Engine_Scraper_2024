@@ -350,9 +350,12 @@ def get_website(comp_keywords, sresults, web_address, web_address2, branch_keywo
     sorted_links = sorted(all_links, key=lambda x: len(x))
     other_pages = ['facebook', 'instagram', 'twitter', 'youtube', 'tiktok', 'linkedin', 'xing', 'trustpilot', 'amazon',
                    'ebay', 'pinterest', 'giphy.co', 'koelnerliste', 'kimeta.de', 'yumpu.com', 'kununu', '/es/', '.co/'
-                   'praxispanda', '.co.in', 'wlw.de', 'firmendatenbank/', 'wikipedia', 'helpcheck.de', 'anwaelte', 'rueden.de']
+                   'praxispanda', '.co.in', 'wlw.de', 'firmendatenbank/', 'wikipedia', 'helpcheck.de', 'anwaelte',
+                   'bild.de', 'zeit.de', 'northdata.', 'rueden.de', 'dasoertliche']
     filtered_results = [rows for rows in sresults if 'http' in rows[0] and (not any(n in rows[0] for n in other_pages)
                                                                         and any(k in rows[0] for k in comp_keywords))]
+    if len(filtered_results) == 0:
+        filtered_results = [rows for rows in sresults if 'http' in rows[0] and (not any(n in rows[0] for n in other_pages))]
     if len(filtered_results) == 0:
         filtered_results = sorted_links
     if len(filtered_results) == 1:
@@ -399,11 +402,6 @@ def get_website(comp_keywords, sresults, web_address, web_address2, branch_keywo
     # Order the dictionary by scores in descending order and the shortest length of the links
  #   sorted_websites = sorted(website_scores.items(), key=lambda x: (x[1], -len(x[0])), reverse=True)
     website_links = [k[0] for k in website_scores.items()]
-
-    if not web_address:
-        website = website_links[0]
-        website_links.pop(0)
-        return website, website_links
     if web_address:
         for l in sorted_links:
             if web_address in l:
@@ -412,7 +410,12 @@ def get_website(comp_keywords, sresults, web_address, web_address2, branch_keywo
         for l in sorted_links:
             if web_address in l:
                 return l, website_links
-
+    if not website and len(website_links) >= 1:
+        for l in website_links:
+            if any(k in l for k in comp_keywords):
+                website = l
+                website_links.remove(l)
+                break
     return website, website_links
 
 
