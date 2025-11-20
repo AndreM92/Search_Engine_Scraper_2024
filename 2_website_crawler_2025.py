@@ -1,3 +1,4 @@
+
 import os
 func_import = r"C:\Users\andre\Documents\Python\Web_Crawler\Search_Engine_Scraper_2024"
 os.chdir(func_import)
@@ -13,11 +14,10 @@ import re
 from datetime import datetime, timedelta
 import time
 
-folder_name = "SMP_Automatisierungstechnik 2025"
-file_name = "Auswahl_SMP Automatisierungstechnik 2025"
-file_path = "C:\\Users\\andre\OneDrive\Desktop/" + folder_name
-file_type = ".xlsx"
-source_file = file_name + file_type
+folder_name = "SMP_Glücksspiel 2025"
+file_name = "Auswahl SMP Glücksspiel_2025-11-15"
+file_path = r"C:\Users\andre\OneDrive\Desktop/" + folder_name
+source_file = file_name + ".xlsx"
 ########################################################################################################################
 
 # Scrape the startpage
@@ -92,23 +92,30 @@ def main(id, row):
     return crawled_row
 
 ########################################################################################################################
-
-# Starting with an empty table and a number of rows you want so skip
-newtable = []
-
 # Run the Crawler/ Scraper
 if __name__ == '__main__':
     # Load the excel file with the required data
     # It should contain the company names and websites
     os.chdir(file_path)
     df_source = pd.read_excel(source_file)
+    col_list = list(df_source.columns)
 
-    driver, page = start_browser_sel(chromedriver_path, startpage, cred.my_useragent, headless=False)
-    for id, row in df_source.iterrows():
-        id += 1
-        full_row = main(id, row)
+    # Start with an empty table and a number of rows you want so skip
+    newtable = []
+    start_ID = 107
+
+    driver, page = start_browser_sel(chromedriver_path, startpage, my_useragent, headless=False)
+
+    for ID, row in df_source.iterrows():
+        if 'ID' in col_list:
+            ID = row['ID']
+        if ID < start_ID:
+            continue
+
+        full_row = main(ID, row)
         newtable.append(full_row)
         print(full_row[:9])
+        start_ID = ID + 1
 
     # Dataframe
     sm_headers = ['Facebook', 'Instagram', 'LinkedIn', 'TikTok', 'Twitter', 'YouTube', 'X']
