@@ -14,14 +14,11 @@ import re
 from datetime import datetime, timedelta
 import time
 
-folder_name = "SMP_Mineralwasser 2025"
-file_name = "Auswahl SMP Mineralwasser_2025-10-14"
-file_path = "C:\\Users\\andre\OneDrive\Desktop/" + folder_name
-file_type = ".xlsx"
-source_file = file_name + file_type
-branch_keywords = [
-    'Abfüll', 'Getränk', 'Lebensmittel', 'PET-', 'Flasche', 'Etikett', 'Dosier', 'Wasser', 'Mineral', 'Füllstand',
-    'Verpackung', 'Trink', 'Durst']
+folder_name = "SMP_Glücksspiel 2025"
+file_name = "Auswahl SMP Glücksspiel_2025-11-15"
+file_path = r"C:\Users\andre\OneDrive\Desktop/" + folder_name
+source_file = file_name + ".xlsx"
+branch_keywords = ['automat', 'bonus', 'casino', 'glück', 'legal', 'poker', 'spiel', 'sport', 'wette']
 ########################################################################################################################
 
 def scrape_page(driver, startpage, row, col_list, platform):
@@ -53,8 +50,8 @@ def scrape_page(driver, startpage, row, col_list, platform):
 
 #######################################################################################################################
 new_table = []
-ID_old = 0
-platform = 'LinkedIn'
+start_ID = 0
+platform = 'Facebook'
 
 if __name__ == '__main__':
     os.chdir(file_path)
@@ -68,9 +65,9 @@ if __name__ == '__main__':
     for ID, row in df_source.iterrows():
         if 'ID' in col_list:
             ID = row['ID']
-        if ID <= ID_old:
+        if ID < start_ID:
             continue
-        ID_old = ID
+        start_ID = ID + 1
 
         result_row = scrape_page(driver, startpage, row, col_list, platform)
         if 'Error' in result_row[-1]:
@@ -89,3 +86,5 @@ if __name__ == '__main__':
     dt_str_now = datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
     recent_filename = 'Search_Results_' + platform + '_' + dt_str_now + '.xlsx'
     df_se.to_excel(recent_filename)
+
+    driver.quit()
