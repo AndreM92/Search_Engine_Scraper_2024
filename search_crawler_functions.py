@@ -291,12 +291,13 @@ def get_company_keywords(row, col_list):
 
 # Search for a specific keyword
 def search_for(driver, startpage, keyword):
+    search_css = "input[name='q']"
     try:
-        searchbox = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="APjFqb"]')))
+        searchbox = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, search_css)))
     except:
         driver.get(startpage)
 #        driver, startpage = start_browser_sel(chromedriver_path, startpage)
-        searchbox = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="APjFqb"]')))
+        searchbox = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, search_css)))
     searchbox.clear()
     for k in keyword:
         searchbox.send_keys(k)
@@ -312,7 +313,8 @@ def search_for(driver, startpage, keyword):
 
 #Get the full search results
 def get_search_results(soup):
-    hits = soup.find_all('div', class_='MjjYud')
+    #hits = soup.find_all('div', class_='MjjYud')
+    hits = soup.find_all('div', class_='Gx5Zad xpd EtOod pkphOe')
     ads = soup.find_all('div', class_='uEierd')
     sresults = []
     for h in hits:
@@ -328,6 +330,12 @@ def get_search_results(soup):
             content = get_visible_text(h)
             if content and title and title in content:
                 content = content.split(title)[1].strip()
+        if link and '=http' in link:
+            link = 'http' + link.split('=http')[1]
+        if '%3Flocale%' in link:
+            link = link.split('%3Flocale%')[0]
+        if '&ved=' in link:
+            link = link.split('&ved=')[0]
         sresults.append([link, title, content])
     for a in ads:
         link_elem = a.find('a',href=True)
