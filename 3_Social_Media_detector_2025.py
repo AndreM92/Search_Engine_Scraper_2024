@@ -14,8 +14,8 @@ import re
 from datetime import datetime, timedelta
 import time
 
-folder_name = "SMP_Glücksspiel 2025"
-file_name = "Auswahl SMP Glücksspiel_2025-11-15"
+folder_name = "SMP_Glücksspiel_2025"
+file_name = "Auswahl SMP Glücksspiel_2025-12-01"
 file_path = r"C:\Users\andre\OneDrive\Desktop/" + folder_name
 source_file = file_name + ".xlsx"
 branch_keywords = ['automat', 'bonus', 'casino', 'glück', 'legal', 'poker', 'spiel', 'sport', 'wette']
@@ -31,7 +31,11 @@ def scrape_page(driver, startpage, row, col_list, platform):
         return result_row
 
     keyword = company + ' ' + platform
-    search_url = search_for(driver, startpage, keyword)
+    try:
+        search_url = search_for(driver, startpage, keyword)
+    except:
+        input('Press ENTER after solving the captcha')
+        search_url = search_for(driver, startpage, keyword)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     pagetext = get_visible_text(soup)
     if search_url == startpage or '/sorry' in search_url or 'CAPTCHA' in pagetext:
@@ -51,7 +55,7 @@ def scrape_page(driver, startpage, row, col_list, platform):
 #######################################################################################################################
 new_table = []
 start_ID = 0
-platform = 'Facebook'
+platform = 'LinkedIn'
 
 if __name__ == '__main__':
     os.chdir(file_path)
@@ -76,7 +80,6 @@ if __name__ == '__main__':
         print(full_row)
         new_table.append(full_row)
 
-    driver.quit()
 
     # Dataframe
     header = ['ID', 'Firma', 'Website', platform, platform + '_2', 'alternatives']

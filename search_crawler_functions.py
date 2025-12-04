@@ -336,6 +336,8 @@ def get_search_results(soup):
             link = link.split('%3Flocale%')[0]
         if '&ved=' in link:
             link = link.split('&ved=')[0]
+        if '%3Fhl%' in link:
+            link = link.split('%3Fhl%')[0]
         sresults.append([link, title, content])
     for a in ads:
         link_elem = a.find('a',href=True)
