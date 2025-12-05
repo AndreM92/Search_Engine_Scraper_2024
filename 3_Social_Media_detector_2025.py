@@ -38,7 +38,7 @@ def scrape_page(driver, startpage, row, col_list, platform):
         search_url = search_for(driver, startpage, keyword)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     pagetext = get_visible_text(soup)
-    if search_url == startpage or '/sorry' in search_url or 'CAPTCHA' in pagetext:
+    if search_url == startpage or '/sorry' in search_url or 'CAPTCHA' in pagetext or '/consent' in search_url:
         input('Press ENTER after solving the captcha')
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         pagetext = get_visible_text(soup)
@@ -69,8 +69,8 @@ if __name__ == '__main__':
     for ID, row in df_source.iterrows():
         if 'ID' in col_list:
             ID = row['ID']
-        if ID < start_ID:
-            continue
+#        if ID < start_ID:                      #If you want to skip some rows
+#            continue
         start_ID = ID + 1
 
         result_row = scrape_page(driver, startpage, row, col_list, platform)
