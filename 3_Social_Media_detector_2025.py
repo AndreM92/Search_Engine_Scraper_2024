@@ -69,9 +69,9 @@ if __name__ == '__main__':
     for ID, row in df_source.iterrows():
         if 'ID' in col_list:
             ID = row['ID']
-#        if ID < start_ID:                      #If you want to skip some rows
-#            continue
-        start_ID = ID + 1
+        if ID < start_ID:                      #If you want to skip some rows
+            continue
+#        start_ID = ID + 1
 
         result_row = scrape_page(driver, startpage, row, col_list, platform)
         if 'Error' in result_row[-1]:
