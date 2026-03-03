@@ -471,15 +471,18 @@ def sm_order(sm_links, linklist):
 
 
 def rank_sm_accounts(platform, comp_keywords, branch_keywords, search_results):
-    if platform == 'X':
-        platform = 'Twitter'
     p_link = platform.lower() + '.com/'
+    if platform == 'X':
+        p_link2 = 'twitter.com'
+    else:
+        p_link2 = p_link
     not_profile = ['/post', 'hashtag', 'sharer','/status', '/photo', 'photos', '/watch', '/video', '/search', '/events', '/mediaset', 'discover', '.help',
                 'groups', 'reels', 'story', 'explore', 'playlist', 'sharer', 'policy', 'privacy', 'instagram.com/p/', '/public', '/developers'
                 '/blog', '/event', '/reel/', '/tag/', '/embed/', '/jobs', '/pub/dir', '/pulse', '/place', '/channel', '/music',
                    '/stadt', 'schule']
     accounts = [row for row in search_results
-                  if p_link in row[0] and not any(n in row[0] for n in not_profile) and not 'Blog' in row[2]
+                  if (p_link in row[0] or p_link2 in row[0]) and not any(n in row[0] for n in not_profile)
+                    and not 'Blog' in row[2]
                         and (any(k.lower() in row[0].lower() for k in comp_keywords) or
                              any(k.lower() in row[0].lower() for k in branch_keywords))]
     if len(accounts) == 0:
@@ -492,7 +495,7 @@ def rank_sm_accounts(platform, comp_keywords, branch_keywords, search_results):
         for a in affixes:
             if a in link:
                 link = link.split(a)[0]
-        if not platform.lower() in link.lower():
+        if not (p_link in link.lower() or p_link2 in link.lower()):
             continue
         ranking_dict[link] = len(accounts) - pos
         link_part = link.split(p_link)[1].replace('in/','').replace('company/','')

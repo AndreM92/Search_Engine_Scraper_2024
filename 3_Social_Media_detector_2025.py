@@ -14,11 +14,11 @@ import re
 from datetime import datetime, timedelta
 import time
 
-folder_name = "SMP_Glücksspiel_2025"
-file_name = "Auswahl SMP Glücksspiel_2025-12-01"
+folder_name = "SMP_ÖPNV_2026"
+file_name = "Auswahl SMP ÖPNV_2026-02-06"
 file_path = r"C:\Users\andre\OneDrive\Desktop/" + folder_name
 source_file = file_name + ".xlsx"
-branch_keywords = ['automat', 'bonus', 'casino', 'glück', 'legal', 'poker', 'spiel', 'sport', 'wette']
+branch_keywords = ['öffentlich', 'nahverkehr', 'mobil', 'regional', 'stadt', 'verkehr', 'unterwegs', 'pendler', 'reise']
 ########################################################################################################################
 
 def scrape_page(driver, startpage, row, col_list, platform):
