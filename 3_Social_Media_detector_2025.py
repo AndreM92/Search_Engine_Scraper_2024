@@ -14,11 +14,11 @@ import re
 from datetime import datetime, timedelta
 import time
 
-folder_name = "SMP_ÖPNV_2026"
-file_name = "Auswahl SMP ÖPNV_2026-02-06"
+folder_name = "SMP Energieanbieter 2026"
+file_name = "Auswahl_SMP Energieanbieter 2026_20260507"
 file_path = r"C:\Users\andre\OneDrive\Desktop/" + folder_name
 source_file = file_name + ".xlsx"
-branch_keywords = ['öffentlich', 'nahverkehr', 'mobil', 'regional', 'stadt', 'verkehr', 'unterwegs', 'pendler', 'reise']
+branch_keywords = ['strom', 'gas', 'nachhaltig', 'versorgung', 'effizient', 'erneuerbar', 'solar', 'wärme', 'sparen', 'tarif', 'klima', 'netz']
 ########################################################################################################################
 
 def scrape_page(driver, startpage, row, col_list, platform):
