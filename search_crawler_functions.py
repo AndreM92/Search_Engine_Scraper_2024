@@ -387,9 +387,9 @@ def get_website(comp_keywords, sresults, web_address, web_address2, branch_keywo
             if k in header or k in desc:
                 website_scores[link] += 2
         for b in branch_keywords:
-            if b in link:
+            if b.lower() in link:
                 website_scores[link] += 1
-            if b in header or b in desc:
+            if b.lower() in header.lower() or b.lower() in desc.lower():
                 website_scores[link] += 1
         if 'Homepage' in str(row2[1]) or 'Official' in str(row2[1]):
             website_scores[link] += 1
