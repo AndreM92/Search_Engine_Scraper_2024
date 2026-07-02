@@ -14,8 +14,8 @@ import re
 from datetime import datetime, timedelta
 import time
 
-folder_name = "SMP_Glücksspiel 2025"
-file_name = "Auswahl SMP Glücksspiel_2025-11-15"
+folder_name = "SMP_Mobilfunk_2026"
+file_name = "Auswahl SMP Telekommunikation_weitere_20260701"
 file_path = r"C:\Users\andre\OneDrive\Desktop/" + folder_name
 source_file = file_name + ".xlsx"
 ########################################################################################################################
@@ -40,8 +40,9 @@ def scrape_startpage(driver, website):
             except:
                 pass
         time.sleep(2)
-    driver.execute_script("window.scrollBy(0,2500)", "")
-    time.sleep(1)
+    for _ in range(5):
+        driver.execute_script("window.scrollBy(0,2500)", "")
+        time.sleep(.5)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     pagetext = get_visible_text(soup)
     linklist = list(set(get_all_links(soup)))
@@ -49,10 +50,13 @@ def scrape_startpage(driver, website):
 
 # Scrape the impressum page
 def scrape_imp(startpage, linklist):
-    for l in linklist:
-        if 'impressum' in str(l):
-            driver.get(l)
-            time.sleep(3)
+    try:
+        for l in linklist:
+            if 'impressum' in str(l):
+                driver.get(l)
+                time.sleep(3)
+    except:
+        return [], ''
     if startpage == driver.current_url:
         imp_buttons = driver.find_elements('xpath', "//*[contains(text(), 'Impressum') or contains(text(), 'impressum')]")
         if len(imp_buttons) >= 1:
@@ -73,7 +77,10 @@ def scrape_imp(startpage, linklist):
 
 
 def main(id, row):
-    company = extract_text(row['Firma'])
+    try:
+        company = extract_text(row['Firma'])
+    except:
+        company = extract_text(row['Firmenname'])
     website = str(row['Website'])
     if len(str(website)) <= 4:
         return [id, company, website] + ['' for _ in range(9)]
@@ -102,10 +109,10 @@ if __name__ == '__main__':
 
     # Start with an empty table and a number of rows you want so skip
     newtable = []
-    start_ID = 107
 
     driver, page = start_browser_sel(chromedriver_path, startpage, my_useragent, headless=False)
 
+    start_ID = 0
     for ID, row in df_source.iterrows():
         if 'ID' in col_list:
             ID = row['ID']
@@ -114,8 +121,8 @@ if __name__ == '__main__':
 
         full_row = main(ID, row)
         newtable.append(full_row)
-        print(full_row[:9])
-        start_ID = ID + 1
+#        start_ID = ID + 1
+        print(full_row[:-4]+[full_row[-2][:50]])
 
     # Dataframe
     sm_headers = ['Facebook', 'Instagram', 'LinkedIn', 'TikTok', 'Twitter', 'YouTube', 'X']
